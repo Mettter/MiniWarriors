@@ -36,60 +36,63 @@ public class QUEEN_PASSIVE : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.P))
         {
             hasPressedP = true; // Set to true when the player presses "P"
-            Debug.Log("P key pressed. Attack Speed Boost will now be applied.");
+            Debug.Log("P key pressed. Boosts will now be applied.");
         }
 
-        // Detect objects within the boost zone
-        Vector2 center = new Vector2(transform.position.x, transform.position.y + yOffset);
-        Collider2D[] hitObjects = Physics2D.OverlapCircleAll(center, radius);
-
-        foreach (Collider2D obj in hitObjects)
+        if (hasPressedP) // Only apply boosts if the P key has been pressed at least once
         {
-            if (!boostedObjects.Contains(obj))
+            // Detect objects within the boost zone
+            Vector2 center = new Vector2(transform.position.x, transform.position.y + yOffset);
+            Collider2D[] hitObjects = Physics2D.OverlapCircleAll(center, radius);
+
+            foreach (Collider2D obj in hitObjects)
             {
-                NearestEnemy enemy = obj.GetComponent<NearestEnemy>();
-                HealthSystem healthSystem = obj.GetComponent<HealthSystem>();
-
-                // Check if the object's tag matches this object's tag
-                bool isSameTeam = obj.CompareTag(gameObject.tag);
-
-                if (!isSameTeam)
+                if (!boostedObjects.Contains(obj))
                 {
-                    // Apply range boost (only for opposite-team rangers)
-                    if (enemy != null && enemy.isRanger) // Only apply to objects with isRanger = true
+                    NearestEnemy enemy = obj.GetComponent<NearestEnemy>();
+                    HealthSystem healthSystem = obj.GetComponent<HealthSystem>();
+
+                    // Check if the object's tag matches this object's tag
+                    bool isSameTeam = obj.CompareTag(gameObject.tag);
+
+                    if (!isSameTeam)
                     {
-                        enemy.RangeBoost(rangeBoostAmount, rangeBoostDuration); // Range boost logic
-                        Debug.Log($"{obj.name} from the opposite team received a range boost.");
+                        // Apply range boost (only for opposite-team rangers)
+                        if (enemy != null && enemy.isRanger) // Only apply to objects with isRanger = true
+                        {
+                            enemy.RangeBoost(rangeBoostAmount, rangeBoostDuration); // Range boost logic
+                            Debug.Log($"{obj.name} from the opposite team received a range boost.");
+                        }
+
+                        // Apply speed boost (only for opposite-team objects)
+                        if (enemy != null)
+                        {
+                            enemy.SpeedBoost(speedBoostAmount, speedBoostDuration); // Speed boost logic
+                            Debug.Log($"{obj.name} from the opposite team received a speed boost.");
+                        }
+
+                        // Apply armor boost (only for opposite-team objects)
+                        if (healthSystem != null)
+                        {
+                            healthSystem.armorPoints += armorBoostValue;
+                            Debug.Log($"{obj.name} received {armorBoostValue} armor boost. Current armor: {healthSystem.armorPoints}");
+                            StartCoroutine(RemoveArmorBoost(healthSystem, armorBoostValue, boostDuration));
+                        }
+                    }
+                    else
+                    {
+                        // Apply attack speed boost (only for same-team rangers)
+                        if (enemy != null && enemy.isRanger)
+                        {
+                            enemy.AttackSpeedBoost(attackSpeedBoostAmount, attackSpeedBoostDuration); // Attack speed boost logic
+                            Debug.Log($"{obj.name} from the same team received an attack speed boost.");
+                        }
                     }
 
-                    // Apply speed boost (only for opposite-team objects)
-                    if (enemy != null)
-                    {
-                        enemy.SpeedBoost(speedBoostAmount, speedBoostDuration); // Speed boost logic
-                        Debug.Log($"{obj.name} from the opposite team received a speed boost.");
-                    }
-
-                    // Apply armor boost (only for opposite-team objects)
-                    if (healthSystem != null)
-                    {
-                        healthSystem.armorPoints += armorBoostValue;
-                        Debug.Log($"{obj.name} received {armorBoostValue} armor boost. Current armor: {healthSystem.armorPoints}");
-                        StartCoroutine(RemoveArmorBoost(healthSystem, armorBoostValue, boostDuration));
-                    }
+                    // Add object to boosted list
+                    boostedObjects.Add(obj);
+                    StartCoroutine(RemoveFromBoostedList(obj, boostDuration));
                 }
-                else
-                {
-                    // Apply attack speed boost (only for same-team rangers, if P key has been pressed)
-                    if (enemy != null && enemy.isRanger && hasPressedP)
-                    {
-                        enemy.AttackSpeedBoost(attackSpeedBoostAmount, attackSpeedBoostDuration); // Attack speed boost logic
-                        Debug.Log($"{obj.name} from the same team received an attack speed boost.");
-                    }
-                }
-
-                // Add object to boosted list
-                boostedObjects.Add(obj);
-                StartCoroutine(RemoveFromBoostedList(obj, boostDuration));
             }
         }
     }

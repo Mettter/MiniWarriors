@@ -98,10 +98,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff0d719c502014483b1cae180b41d2be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 8
+  damage: 7
   teamTag: 
   projectileParticles: {fileID: 8254761384261757864, guid: 1916cc96a2b10451287cd82e62c7760f, type: 3}
   isPiersesThoughTarget: 0
+  isIgnoresArmorArrow: 0
 --- !u!61 &3643985843128143797
 BoxCollider2D:
   m_ObjectHideFlags: 0

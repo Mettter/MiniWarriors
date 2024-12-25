@@ -88,8 +88,5 @@ Assets/StreamingAssets/invData.json.meta
 !/Assets/Music/whatToInclude.txt
 
 #Unity
-Library/
-Logs/
-Temp/
 *.unitypackage
 FSTimeGet-*

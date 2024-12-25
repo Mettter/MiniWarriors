@@ -19,9 +19,18 @@ public class NearestEnemy : MonoBehaviour
     [SerializeField] private bool targetsFarthestEnemy = false;
     [SerializeField] private bool isGrandma = false;
     [SerializeField] private bool isNotWalking = false;
+    [SerializeField] private bool dashesAtStart = false;
+    [SerializeField] private bool healthWhenDealsDamage = false;
+    [SerializeField] private int attackRegen = 10;
     //[SerializeField] private bool is = false;
     private float originalAttackSpeed;
+    [SerializeField] private bool isIgnoringArmor = false;
+    [SerializeField] private bool isPrefab = false;
 
+    [Header("Dash Settings")]
+    [SerializeField] private float dashDistance = 5f; 
+    [SerializeField] private float dashDuration = 0.2f; 
+    [SerializeField] private bool isDashCollidable = false;
 
     [Header("Bleed Effect Settings")]
     public bool isAttackCauseBleed = false; // Determines if the attack causes bleed
@@ -31,13 +40,16 @@ public class NearestEnemy : MonoBehaviour
     public float bleedDuration = 3f; 
     private float targetChangeCooldown = 10f; // Time in seconds before switching targets
     private float timeSinceLastTargetChange = 0f; // Track time since last target change
-    private Transform currentTarget = null;      // Duration of the bleed effect in seconds
+    private Transform currentTarget = null;  
+    private bool isDashing = false;   
+    private Vector2 originalPosition; // Duration of the bleed effect in seconds
 
 
 
     
     [Header("Mana Settings")]
-    [SerializeField] private ManaSystem manaSystem; // Reference to the ManaSystem
+    [SerializeField] private ManaSystem manaSystem;
+    [SerializeField] private HealthSystem healthSystem; // Reference to the ManaSystem
     [SerializeField] private float manaPerAttack = 10f; // Mana gained per attack
 
     [Header("Projectile Settings")]
@@ -47,6 +59,17 @@ public class NearestEnemy : MonoBehaviour
     [SerializeField] private float decayInterval = 0.5f;
     [SerializeField] private float targetOffset = 0.5f;
     [SerializeField] private bool isPiercingProjectile = false;
+    [SerializeField] private bool needBullets = false;
+    [SerializeField] public float bulletCount = 0f;
+    [SerializeField] public float bulletPerSecond = 0f;
+    [SerializeField] public float maxBullets = 0f;
+    [SerializeField] public float bulletGainSpeed = 0f;
+    [SerializeField] private bool goesMeleif0Bullets = false;
+    [SerializeField] public float meleAttackRange = 0f;
+    [SerializeField] public float rangedAttackRange = 0f;
+    [SerializeField] public float meleAttackCooldown = 0.5f;
+    [SerializeField] public float rangedAttackCooldown = 0.5f;
+    [SerializeField] private bool goesRangedif0Bullets = false;
 
     [Header("Spawn Positions")]
     [SerializeField] private Transform spawnPosTeam1;
@@ -57,12 +80,16 @@ public class NearestEnemy : MonoBehaviour
 
     private Transform nearestEnemy;
     private bool isAttacking = false;
+    private bool isConvertedToMele = false;
+    private bool isConvertedToRanged = false;
     private bool canMove = false;
     private Animator animator;
     public bool isStunned = false; // Determines if the character is stunned
     private float stunDuration = 0f; 
     private bool pKeyPressed = false;
     private bool isShooting = false;
+    private bool isCHooseFarthesEnemy = false;
+    private bool isShootingMultipleProjectiles = false;
 
     [Header("Particle Effects")]
     [SerializeField] private GameObject damageBoostP; // Particle effect for damage boost
@@ -75,9 +102,16 @@ public class NearestEnemy : MonoBehaviour
 
     private void Start()
     {
+        if (targetsFarthestEnemy == true)
+        {
+            FindFarthestObject();
+            isCHooseFarthesEnemy = true;
+        }
+    
         float originalAttackSpeed = attackCooldown;
         originalAttackRange = attackRange;
         animator = GetComponent<Animator>();
+        StartCoroutine(RegenerateBulletsOverTime());
 
         // Automatically assign ManaSystem if not manually set
         if (manaSystem == null)
@@ -100,17 +134,24 @@ public class NearestEnemy : MonoBehaviour
             Debug.Log("ProjectilePrefab was destroyed during OnDestroy.");
         }
     }
-    
+
     if (!canMove && Input.GetKeyDown(KeyCode.P))
     {
         canMove = true;
         Debug.Log("Movement enabled!");
+        if (dashesAtStart == true)
+        {
+            StartCoroutine(Dash());
+        }
     }
 
+    
     if (isStunned)
         {
             stunDuration -= Time.deltaTime;
             animator.SetBool("isWalking", false);
+            animator.SetBool("isAttacking", false);
+
             if (stunDuration <= 0f)
             {
                 isStunned = false; // Stop being stunned when duration ends
@@ -119,24 +160,48 @@ public class NearestEnemy : MonoBehaviour
 
     if (isStunned) return;
 
+    // When converting to melee
+if (bulletCount == 0 && goesMeleif0Bullets == true && isConvertedToMele == false)
+{
+    isRanger = false;
+    attackRange = meleAttackRange;
+    attackCooldown = meleAttackCooldown;
+    isConvertedToMele = true;
+    isConvertedToRanged = false;
+
+    // Set animator bool for melee
+    animator.SetBool("isRanger", false);
+}
+
+// When converting to ranged
+if (bulletCount > 0 && goesRangedif0Bullets == true && isConvertedToRanged == false)
+{
+    isRanger = true;
+    attackRange = rangedAttackRange;
+    attackCooldown = rangedAttackCooldown;
+    isConvertedToRanged = true;
+    isConvertedToMele = false;
+
+    // Set animator bool for ranged
+    animator.SetBool("isRanger", true);
+}
+
+
+
     timeSinceLastTargetChange += Time.deltaTime;
 
     // Prioritize farthest enemy target if needed, but only if cooldown has passed
     timeSinceLastTargetChange += Time.deltaTime;
 
     // Если цель еще не установлена, найдем ее (только если прошло достаточно времени)
-    if (currentTarget == null && timeSinceLastTargetChange >= targetChangeCooldown)
-    {
-        if (targetsFarthestEnemy)
-        {
-            FindFarthestObject();
-        }
-        else
-        {
-            FindNearestObject();
-        }
-    }
 
+    if (targetsFarthestEnemy == true && isCHooseFarthesEnemy == true || targetsFarthestEnemy && nearestEnemy == null)
+{
+    FindFarthestObject();
+    isCHooseFarthesEnemy = false;
+}
+
+    
     if (true)
     {
         if (isSupport && targetsFarthestEnemy == false)
@@ -152,15 +217,20 @@ public class NearestEnemy : MonoBehaviour
 
     if (true)
     {
-        FlipSprite();
-        if (attackCooldown < minimalAttackSpeed)    
-            attackCooldown = minimalAttackSpeed;
+        if (isDashing == false)
+        {
+            FlipSprite();
+        }
+        
 
         if (isNotWalking)    
             moveSpeed = 0;
     }
 
-    if (nearestEnemy == null)
+    if (attackCooldown < minimalAttackSpeed)    
+        attackCooldown = minimalAttackSpeed;
+
+    if (nearestEnemy == null && targetsFarthestEnemy == false)
 {
     if (isSupport)
     {
@@ -425,6 +495,7 @@ private void FindNearestAlly()
 
     private void FindFarthestObject()
 {
+
     string targetTag = isSupport ? gameObject.tag : (gameObject.CompareTag("Team1") ? "Team2" : "Team1");
     GameObject[] objects = GameObject.FindGameObjectsWithTag(targetTag);
     float farthestDistance = 0f; // Start with the smallest possible distance
@@ -455,6 +526,7 @@ private void FindNearestAlly()
 
 
 
+
     private void MoveTowards(Vector2 targetPosition)
     {
         Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
@@ -482,13 +554,13 @@ private void FindNearestAlly()
         }
     }
 
-    private IEnumerator Attack()
+
+private IEnumerator Attack()
 {
     // Determine the opposite team's count based on the current game object's tag
-    int oppositeTeamCount = gameObject.CompareTag("Team1") ? TeamManager.Team2Count : TeamManager.Team1Count;
+    //int oppositeTeamCount = gameObject.CompareTag("Team1") ? TeamManager.Team2Count : TeamManager.Team1Count;
 
     // If the opposite team's count is 0, do not proceed with the attack
-
     // Set attacking state
     isAttacking = true;
 
@@ -506,7 +578,6 @@ private void FindNearestAlly()
     // Check if there are any enemies in range from the opposite team
     bool hasValidTarget = false;
 
-    // Check if there are any valid enemies to attack
     foreach (Collider2D enemy in hitEnemies)
     {
         if (enemy != null && enemy.CompareTag(gameObject.CompareTag("Team1") ? "Team2" : "Team1"))
@@ -535,8 +606,8 @@ private void FindNearestAlly()
                 HealthSystem health = enemy.GetComponent<HealthSystem>();
                 if (health != null)
                 {
-                    health.TakeDamage(attackDamage);
-                    Debug.Log($"{gameObject.name} attacked {enemy.name} for {attackDamage} damage.");
+                    health.TakeDamage(attackDamage, isIgnoringArmor); // Pass isIgnoringArmor to TakeDamage
+                    Debug.Log($"{gameObject.name} attacked {enemy.name} for {attackDamage} damage. Ignoring armor: {isIgnoringArmor}");
 
                     // Apply bleed if conditions are met
                     if (isAttackCauseBleed && !isRanger)
@@ -551,7 +622,7 @@ private void FindNearestAlly()
     else // Attack only the nearest enemy
     {
         Collider2D nearestEnemy = null;
-        float shortestDistance = Mathf.Infinity;  // Start with an infinitely large distance
+        float shortestDistance = Mathf.Infinity;
 
         foreach (Collider2D enemy in hitEnemies)
         {
@@ -564,7 +635,7 @@ private void FindNearestAlly()
                 if (distanceToEnemy < shortestDistance)
                 {
                     shortestDistance = distanceToEnemy;
-                    nearestEnemy = enemy;  // Set the nearest enemy
+                    nearestEnemy = enemy;
                 }
             }
         }
@@ -574,10 +645,8 @@ private void FindNearestAlly()
             HealthSystem health = nearestEnemy.GetComponent<HealthSystem>();
             if (health != null)
             {
-                health.TakeDamage(attackDamage);
-                Debug.Log($"{gameObject.name} attacked {nearestEnemy.name} for {attackDamage} damage.");
-
-                // Apply bleed if conditions are met
+                health.TakeDamage(attackDamage, isIgnoringArmor); // Pass isIgnoringArmor to TakeDamage
+                Debug.Log($"{gameObject.name} attacked {nearestEnemy.name} for {attackDamage} damage. Ignoring armor: {isIgnoringArmor}");
                 if (isAttackCauseBleed && !isRanger)
                 {
                     health.ApplyBleed(bleedStrength, bleedDuration);
@@ -588,13 +657,33 @@ private void FindNearestAlly()
     }
 
     GainMana();
+    
+    if (healthWhenDealsDamage == true)
+    {
+        HealHp();
+    }
+
     yield return new WaitForSeconds(attackCooldown);
+
 
     // Reset attack state after cooldown
     isAttacking = false;
 }
 
 
+    private IEnumerator RegenerateBulletsOverTime()
+    {
+        while (true)
+        {
+            // Add manaPerSecond to currentMana
+            if (bulletCount < maxBullets)
+            {
+                bulletCount += bulletPerSecond;  
+            }
+            // Wait for 1 second before adding more mana
+            yield return new WaitForSeconds(bulletGainSpeed);
+        }
+    }
 
 
 
@@ -679,6 +768,18 @@ private IEnumerator ShootProjectile()
         animator.SetBool("isWalking", false); // Optional: stop walking animation if needed
     }
 
+    // Check if bullets are needed and whether there are bullets available
+    if (needBullets && bulletCount <= 0)
+    {
+        // No bullets available, exit the coroutine early
+        isCurrentlyAttacking = false;
+        if (animator != null)
+        {
+            animator.SetBool("isAttacking", false); // Stop attack animation
+        }
+        yield break; // Exit the coroutine without shooting
+    }
+
     // Set the position from where the projectile will spawn
     Vector3 spawnPosition = transform.position;
 
@@ -692,9 +793,6 @@ private IEnumerator ShootProjectile()
         spawnPosition = spawnPosTeam2.position;
     }
 
-    // Wait for the attack cooldown before shooting the projectile
-    yield return new WaitForSeconds(attackCooldown);
-
     // Instantiate the projectile at the spawn position
     GameObject projectile = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
     projectile.tag = gameObject.tag; // Ensure the projectile has the same tag as the unit
@@ -705,7 +803,19 @@ private IEnumerator ShootProjectile()
     // Handle mana and other cooldown-related mechanics (if needed)
     GainMana();
 
-    // Wait for the attack cooldown delay after the shot before allowing another shot
+    // Decrease bullet count if needed
+    if (needBullets && bulletCount > 0)
+    {
+        bulletCount -= 1; // Decrease bullet count by 1
+        Debug.Log($"Bullet Count: {bulletCount} (After shooting)");
+    }
+
+    if (healthWhenDealsDamage == true)
+    {
+        HealHp();
+    }
+
+    // Wait for the attack cooldown delay before allowing another shot
     yield return new WaitForSeconds(attackCooldown);
 
     // Reset attack animation and allow it to continue only if this object is attacking
@@ -719,8 +829,60 @@ private IEnumerator ShootProjectile()
 
 
 
+private IEnumerator Dash()
+    {
+        yield return new WaitForSeconds(0.2f);
+        if (animator != null)
+        {
+            animator.SetBool("isDashing", true);
+            animator.SetBool("isWalking", false);
+        }
+        isDashing = true; // Set dashing state
+        originalPosition = transform.position; // Record the starting position
 
+        Collider2D playerCollider = GetComponent<Collider2D>(); // Get the Collider2D directly from this object
 
+        // Disable collisions if isDashCollidable is false
+        if (!isDashCollidable && playerCollider != null)
+        {
+            playerCollider.enabled = false;
+        }
+
+        float elapsed = 0f; // Timer for the dash
+        Vector2 targetPosition = originalPosition + new Vector2(dashDistance, 0); // Target position (X direction)
+
+        while (elapsed < dashDuration)
+        {
+            // Smoothly interpolate the object's position to the target position over the dash duration
+            transform.position = Vector2.Lerp(originalPosition, targetPosition, elapsed / dashDuration);
+            elapsed += Time.deltaTime; // Increment the timer
+            yield return null;
+        }
+
+        // Ensure the object ends exactly at the target position
+        transform.position = targetPosition;
+
+        // Re-enable collisions
+        if (!isDashCollidable && playerCollider != null)
+        {
+            playerCollider.enabled = true;
+        }
+
+        // Reset dashing state
+        isDashing = false;
+
+        // Set Animator parameter to false
+        if (animator != null)
+        {
+            animator.SetBool("isDashing", false);
+            animator.SetBool("isWalking", true);
+        }
+    }
+
+private IEnumerator WaitOneSecond()
+{
+    yield return new WaitForSeconds(10f); // Wait for 1 second
+}
 
     private void GainMana()
     {
@@ -731,10 +893,19 @@ private IEnumerator ShootProjectile()
         }
     }
 
+    private void HealHp()
+    {
+            healthSystem.Heal(attackRegen);
+            Debug.Log($"{gameObject.name} gained {manaPerAttack} mana. Current Mana: {manaSystem.currentMana}");
+
+    }
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Vector2 attackPosition = new Vector2(transform.position.x, transform.position.y + yOffset);
         Gizmos.DrawWireSphere(attackPosition, attackRange);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(transform.position, transform.position + new Vector3(dashDistance, 0, 0));
     }
 }

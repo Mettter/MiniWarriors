@@ -79,7 +79,7 @@ public class IncreaseDamageOnUltimateMana : MonoBehaviour
             Debug.Log($"Super damage boost triggered! Increased by {DamageIncreaseAmount}.");
 
             // Reset currentMana to 0 after boosting damage
-            manaSystem.currentMana = 0f;
+            manaSystem.currentMana -= ultimateMana;
             Debug.Log("Current mana reset to 0.");
         }
         else

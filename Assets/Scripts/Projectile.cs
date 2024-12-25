@@ -6,8 +6,11 @@ public class Projectile : MonoBehaviour
     public string teamTag; // Tag for the projectile's team
     public GameObject projectileParticles;  // The particle effect prefab to spawn
     private TrailRenderer trailRenderer; // Reference to the TrailRenderer
-    private SpriteRenderer spriteRenderer;
-    [SerializeField] public bool isPiersesThoughTarget = false;// Reference to the SpriteRenderer
+    private SpriteRenderer spriteRenderer; // Reference to the SpriteRenderer
+    [SerializeField] public bool isPiersesThoughTarget = false;
+    [SerializeField] public bool isIgnoresArmorArrow = false;
+    [SerializeField] public bool isProjectileStun = false; // Determines if this projectile stuns
+    [SerializeField] public float stunAmount = 2f; // Stun duration in seconds
 
     private void Start()
     {
@@ -72,14 +75,35 @@ public class Projectile : MonoBehaviour
             HealthSystem health = other.GetComponent<HealthSystem>();
             if (health != null)
             {
-                health.TakeDamage(damage); // Apply damage
+                if (isIgnoresArmorArrow)
+                {
+                    health.TakeDamage(damage, isIgnoresArmorArrow);
+                }
+                else
+                {
+                    health.TakeDamage(damage);
+                }
             }
             else
             {
                 Debug.LogWarning("HealthSystem not found on the object.");
             }
 
-            if (isPiersesThoughTarget == false)
+            // Check for NearestEnemy script and apply stun if applicable
+            if (isProjectileStun)
+            {
+                NearestEnemy nearestEnemy = other.GetComponent<NearestEnemy>();
+                if (nearestEnemy != null)
+                {
+                    nearestEnemy.Stun(stunAmount); // Apply the stun
+                }
+                else
+                {
+                    Debug.LogWarning("NearestEnemy component not found on the object.");
+                }
+            }
+
+            if (!isPiersesThoughTarget)
             {
                 // Destroy the projectile after hitting the enemy
                 Destroy(gameObject);

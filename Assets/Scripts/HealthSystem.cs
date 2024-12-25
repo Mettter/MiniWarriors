@@ -7,26 +7,61 @@ public class HealthSystem : MonoBehaviour
     public float currentHealth;     // Current health
     public float armorPoints = 10f; // Armor points
     public bool isTank = false;     // If true, this entity is a tank and will regenerate mana on damage
-    public float tankManaAmount = 5f; // The amount of mana added to the currentMana when damage is taken (only for tank)
+    public float tankManaAmount = 5f; 
+    public bool staysAfterDeath = false; 
+    public float afterlifeAmount = 0f; // The amount of mana added to the currentMana when damage is taken (only for tank)
 
-    public GameObject healthParticles;  // Reference to the health particles prefab
+    public GameObject healthParticles;
+    public float speedOfBattle = 2f;  // Reference to the health particles prefab
     private Animator animator;
-    private ManaSystem manaSystem; // Reference to the ManaSystem script
+    private ManaSystem manaSystem; 
+    public GameObject ADDBlockParticles;// Reference to the ManaSystem script
 
     private Coroutine bleedCoroutine; // To track and stop an ongoing bleed
 
+    // New block system
+    public float blockCount = 0;  // The number of blocks this entity has available
+    public float stunDuration = 2f; // Duration for stun effect
+    private bool hasPressedP = false; // Track if P key was pressed at least once
+    private float lastPPressTime = -999f; // To store the last time P was pressed
+    private float minTimeBetweenPresses = 0f;
+    public NearestEnemy nearestEnemy;
+    private bool healthMaxed = false; 
+    [SerializeField] private bool isPrefab = false;// Minimum time required between P key presses
+
+    public bool isInvincibleAfterTakingDamage = false; // Should the entity be invincible after taking damage?
+    public float invincibilityDuration = 1f; // Duration of invincibility frames
+
+    private float invincibilityTimer = 0f;
+
     private void Start()
     {
-        // Initialize current health to max health
-        currentHealth = maxHealth;
-        Debug.Log($"{gameObject.name} spawned with {currentHealth} health and {armorPoints} armor.");
+        if (healthMaxed == false && isPrefab == false)// Initialize current health to max health
+        {
+            maxHealth *= speedOfBattle;
+            currentHealth = maxHealth;
 
+            currentHealth = maxHealth;
+            Debug.Log($"{gameObject.name} spawned with {currentHealth} health and {armorPoints} armor.");
+            healthMaxed = true;
+        }   
         // Get the Animator component
         animator = GetComponent<Animator>();
         if (animator == null)
         {
             Debug.LogWarning("Animator component is missing!");
         }
+
+        if (staysAfterDeath == false)
+        {
+            afterlifeAmount = 0f;
+        }
+
+        nearestEnemy = GetComponent<NearestEnemy>();
+    if (nearestEnemy == null)
+    {
+        Debug.LogWarning("NearestEnemy component is missing!");
+    }
 
         // Get the ManaSystem component if this entity is a tank
         if (isTank)
@@ -39,31 +74,101 @@ public class HealthSystem : MonoBehaviour
         }
     }
 
-    public void TakeDamage(float damageAmount)
+    private void Update()
     {
-        float effectiveDamage = Mathf.Max(damageAmount - armorPoints, 0);
-        currentHealth -= effectiveDamage;
-        currentHealth = Mathf.Max(currentHealth, 0);
-
-        Debug.Log($"{gameObject.name} took {damageAmount} damage (effective: {effectiveDamage}). Remaining health: {currentHealth}");
-
-        if (animator != null)
+        // Check if the P key was pressed and if the time elapsed since the last press is greater than 0.2 seconds
+        if (Input.GetKeyDown(KeyCode.P) && Time.time - lastPPressTime >= minTimeBetweenPresses)
         {
-            animator.SetBool("isTakingDamage", true);
-            Invoke(nameof(ResetTakingDamage), 0.1f);
+            hasPressedP = true;
+            lastPPressTime = Time.time; // Update the last press time
+            Debug.Log($"{gameObject.name} pressed P key.");
         }
 
-        if (isTank && manaSystem != null)
-        {
-            manaSystem.AddMana(tankManaAmount);
-            Debug.Log($"{gameObject.name} added {tankManaAmount} mana for being a tank.");
-        }
-
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        if (isInvincibleAfterTakingDamage && invincibilityTimer > 0)
+    {
+        invincibilityTimer -= Time.deltaTime;
     }
+    }
+
+    public void TakeDamage(float damageAmount, bool isIgnoresArmor = false)
+{
+    // If invincible, return early and don't apply damage
+    if (isInvincibleAfterTakingDamage && invincibilityTimer > 0)
+    {
+        Debug.Log($"{gameObject.name} is invincible! Damage blocked.");
+        return;
+    }
+
+    if (!isIgnoresArmor)
+    {
+        // Block logic
+        if (hasPressedP && blockCount > 0)
+        {
+            // If blockCount is greater than 0 and P key was pressed with sufficient delay, nullify the damage and decrease blockCount
+            blockCount--;
+            Debug.Log($"{gameObject.name} blocked the damage! Remaining blocks: {blockCount}");
+
+            // Start the block logic (set animator bool to true and stun self)
+
+            // Try to access NearestEnemy and apply stun
+            if (nearestEnemy != null)
+            {
+                Debug.Log($"{gameObject.name} stunned the nearest enemy for {stunDuration} seconds.");
+            }
+
+            return; // No damage is taken, exit the function early
+        }
+        else if (!isPrefab && !hasPressedP)
+        {
+            Debug.Log($"{gameObject.name} cannot block because P key was not pressed.");
+            return; // If P key wasn't pressed, no blocking will happen
+        }
+
+        // Calculate effective damage based on armor
+        damageAmount = Mathf.Max(damageAmount - armorPoints, 0);
+    }
+
+    // Apply damage directly to health
+    currentHealth -= damageAmount;
+    currentHealth = Mathf.Max(currentHealth, 0);
+
+    Debug.Log($"{gameObject.name} took {damageAmount} damage. Remaining health: {currentHealth}");
+
+    if (animator != null)
+    {
+        animator.SetBool("isTakingDamage", true);
+        Invoke(nameof(ResetTakingDamage), 0.1f);
+    }
+
+    if (isTank && manaSystem != null)
+    {
+        manaSystem.AddMana(tankManaAmount);
+        Debug.Log($"{gameObject.name} added {tankManaAmount} mana for being a tank.");
+    }
+
+    if (isInvincibleAfterTakingDamage)
+    {
+        // Start invincibility frames after taking damage
+        invincibilityTimer = invincibilityDuration;
+        Debug.Log($"{gameObject.name} is now invincible for {invincibilityDuration} seconds.");
+    }
+
+    if (currentHealth <= 0 && staysAfterDeath == false)
+    {
+        Die(afterlifeAmount);
+    }
+    else if (currentHealth <= 0 && staysAfterDeath == true)
+    {
+        if (healthParticles != null)
+        {
+            Instantiate(healthParticles, transform.position, Quaternion.identity);
+        }
+        Die(afterlifeAmount);
+    }
+}
+
+
+
 
     private void ResetTakingDamage()
     {
@@ -86,10 +191,22 @@ public class HealthSystem : MonoBehaviour
         }
     }
 
-    private void Die()
+    public void AddBlock(float healAmount)
+    {
+        blockCount += healAmount;
+
+        Debug.Log($"{gameObject.name} healed for {healAmount}. Current health: {currentHealth}");
+
+        if (healthParticles != null)
+        {
+            Instantiate(ADDBlockParticles, transform.position, Quaternion.identity);
+        }
+    }
+
+    private void Die(float afterlifeAmount)
     {
         Debug.Log($"{gameObject.name} has died.");
-        Destroy(gameObject);
+        Destroy(gameObject, afterlifeAmount);
     }
 
     public void RegenerateHealth(float regenAmount, float regenRate)
@@ -144,4 +261,40 @@ public class HealthSystem : MonoBehaviour
         Debug.Log($"{gameObject.name} has stopped bleeding.");
         bleedCoroutine = null; // Reset the coroutine reference
     }
+
+    // New method to try to find and stun the nearest enemy
+    private void TryStunNearestEnemy()
+    {
+        // Attempt to find the nearest enemy
+        NearestEnemy nearestEnemy = FindNearestEnemy();
+
+        if (nearestEnemy != null)
+        {
+            // Apply stun effect to the nearest enemy
+            Debug.Log($"{gameObject.name} stunned the nearest enemy for {stunDuration} seconds.");
+        }
+        else
+        {
+            Debug.Log("No nearest enemy found to stun.");
+        }
+    }
+
+    // Try to find the nearest enemy (you may need to adjust this logic depending on your game setup)
+    private NearestEnemy FindNearestEnemy()
+    {
+        // Assuming you have a way to find the nearest enemy in the scene
+        // For example, using a simple tag or layer check:
+        Collider[] enemies = Physics.OverlapSphere(transform.position, 10f, LayerMask.GetMask("Enemy"));
+
+        if (enemies.Length > 0)
+        {
+            // If there's at least one enemy, return the first one (you can add additional logic to find the nearest)
+            return enemies[0].GetComponent<NearestEnemy>();
+        }
+
+        return null; // No enemies found
+    }
+
+    // Start blocking animation and stun self
+    
 }

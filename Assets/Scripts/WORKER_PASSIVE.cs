@@ -1,81 +1,57 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GrandpaBoost : MonoBehaviour
 {
     [Header("Boost Settings")]
-    [SerializeField] private float radius = 3f; // Radius of the detection zone
-    [SerializeField] private float cooldownDuration = 5f; // Cooldown duration
+    [SerializeField] private float radius = 3f; // Radius of the detection zone (currently unused)
     [SerializeField] private GameObject spawnPrefab; // Prefab to spawn
+    [SerializeField] private Transform spawnPoint; // The transform of the spawn point
+    [SerializeField] private float yOffset = -0.25f; // Y offset for the spawn position, adjustable in Inspector
 
     [Header("Visual Settings")]
     [SerializeField] private Color boostZoneColor = Color.green; // Color of the detection circle
 
-    private bool isBoostActivated = false; // Tracks if the P key has been pressed
-    private float lastSpawnTime = -Mathf.Infinity; // Tracks the last spawn time
+    private bool hasSpawned = false; // Tracks if the prefab has already been spawned
 
     private void Update()
     {
-        // Check if the P key has been pressed to activate spawning
-        if (Input.GetKeyDown(KeyCode.P))
+        // Check if the P key has been pressed and if the prefab hasn't been spawned yet
+        if (Input.GetKeyDown(KeyCode.P) && !hasSpawned)
         {
-            isBoostActivated = true;
-        }
-
-        // Only proceed if boosting is activated and cooldown has passed
-        if (!isBoostActivated || Time.time - lastSpawnTime < cooldownDuration) return;
-
-        // Find the nearest valid target
-        Collider2D nearestTarget = FindNearestTarget();
-
-        if (nearestTarget != null)
-        {
-            SpawnPrefabAtTarget(nearestTarget);
-            lastSpawnTime = Time.time; // Update cooldown timer
+            StartCoroutine(SpawnPrefabWithDelay());
         }
     }
 
-    private Collider2D FindNearestTarget()
+    private IEnumerator SpawnPrefabWithDelay()
     {
-        Vector2 center = new Vector2(transform.position.x, transform.position.y); // Center of the detection zone
-        Collider2D[] hitObjects = Physics2D.OverlapCircleAll(center, radius);
+        // Wait for 0.1 seconds before spawning
+        yield return new WaitForSeconds(0.1f);
 
-        Collider2D nearestTarget = null;
-        float shortestDistance = Mathf.Infinity;
+        // Check if this object has been destroyed during the delay
+        if (this == null) yield break;
 
-        foreach (Collider2D obj in hitObjects)
+        if (spawnPoint == null)
         {
-            // Skip objects with the same tag as the spawner
-            if (obj.CompareTag(gameObject.tag)) continue;
-
-            // Ensure the object belongs to Team1 or Team2
-            if (obj.CompareTag("Team1") || obj.CompareTag("Team2"))
-            {
-                float distance = Vector2.Distance(transform.position, obj.transform.position);
-
-                // Check if this object is the closest one found so far
-                if (distance < shortestDistance)
-                {
-                    shortestDistance = distance;
-                    nearestTarget = obj;
-                }
-            }
+            Debug.LogError("Spawn Point is not assigned. Please assign a spawn point in the Inspector.");
+            yield break;
         }
 
-        return nearestTarget;
-    }
+        // Adjust the spawn position with the Y offset
+        Vector3 adjustedSpawnPosition = spawnPoint.position;
+        adjustedSpawnPosition.y += yOffset;
 
-    private void SpawnPrefabAtTarget(Collider2D target)
-    {
-        // Spawn the prefab at the target's position
-        Vector3 spawnPosition = new Vector3(target.transform.position.x, target.transform.position.y, target.transform.position.z);
-        GameObject spawnedObject = Instantiate(spawnPrefab, spawnPosition, Quaternion.identity);
+        // Spawn the prefab at the adjusted position
+        GameObject spawnedObject = Instantiate(spawnPrefab, adjustedSpawnPosition, spawnPoint.rotation);
 
         // Set the same tag as the spawner object
         spawnedObject.tag = gameObject.tag;
 
-        Debug.Log($"Spawned prefab at {target.name}'s position.");
+        // Log spawn information
+        Debug.Log($"Spawned prefab at spawn point with Y offset: {spawnPoint.name}, Position: {adjustedSpawnPosition}");
+
+        // Mark that the prefab has been spawned
+        hasSpawned = true;
     }
 
     private void OnDrawGizmos()

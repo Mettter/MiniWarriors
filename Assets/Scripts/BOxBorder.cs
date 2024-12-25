@@ -2,20 +2,17 @@ using UnityEngine;
 
 public class DamageBoosterWithTeleport : MonoBehaviour
 {
-    private Projectile projectile; // Reference to the Projectile component
     [SerializeField] private float boostedDamage = 9999f; // Damage value when boosted
-    [SerializeField] private float teleportRange = 10f; // Number of tiles to teleport
+    [SerializeField] private float teleportRange = 10f;   // Number of tiles to teleport
     [SerializeField] private float teleportDuration = 0.5f; // Duration of teleportation effect
+    [SerializeField] private bool tpByY = false;          // Teleport by Y-coordinate if true, otherwise by X-coordinate
+
+    private Vector3 originalPosition; // Store the original position
 
     private void Start()
     {
-        // Get the Projectile component from the current GameObject
-        projectile = GetComponent<Projectile>();
-
-        if (projectile == null)
-        {
-            Debug.LogError("No Projectile component found on this GameObject.");
-        }
+        // Store the original position at the start
+        originalPosition = transform.position;
     }
 
     private void Update()
@@ -29,25 +26,47 @@ public class DamageBoosterWithTeleport : MonoBehaviour
 
     private void ApplyBoostAndTeleport()
     {
-        if (projectile != null)
-        {
-            // Boost damage
-            projectile.damage = boostedDamage;
-            Debug.Log($"{projectile.name}'s damage set to {boostedDamage}");
-
-            // Start teleportation
-            StartCoroutine(TeleportRoutine());
-        }
+        // Start teleportation routine
+        StartCoroutine(TeleportRoutine());
     }
 
     private System.Collections.IEnumerator TeleportRoutine()
     {
-        // Teleport to a new position based on the teleport range
-        Vector3 newPosition = transform.position + new Vector3(teleportRange, 0, 0); // Teleport only on the x-axis
-        transform.position = newPosition;
-        Debug.Log($"{gameObject.name} teleported by {teleportRange} tiles to position {transform.position}.");
+        // Determine the target position based on the teleport range and tpByY flag
+        Vector3 targetPosition = tpByY 
+            ? originalPosition + new Vector3(0, teleportRange, 0) 
+            : originalPosition + new Vector3(teleportRange, 0, 0);
 
-        // Optionally, wait for the teleportation effect to finish before continuing
+        // Teleport to the target position (first teleport)
+        transform.position = targetPosition;
+        Debug.Log($"{gameObject.name} teleported to {transform.position}.");
+
+        // Wait for teleport duration
         yield return new WaitForSeconds(teleportDuration);
+
+        // Teleport back to the original position
+        transform.position = originalPosition;
+        Debug.Log($"{gameObject.name} teleported back to original position {originalPosition}.");
+
+        // Wait again for teleport duration
+        yield return new WaitForSeconds(teleportDuration);
+
+        // Now start a continuous loop to teleport back and forth
+        while (true)
+        {
+            // Teleport to the target position
+            transform.position = targetPosition;
+            Debug.Log($"{gameObject.name} teleported to {transform.position}.");
+
+            // Wait for teleport duration
+            yield return new WaitForSeconds(teleportDuration);
+
+            // Teleport back to the original position
+            transform.position = originalPosition;
+            Debug.Log($"{gameObject.name} teleported back to original position {originalPosition}.");
+
+            // Wait again for teleport duration
+            yield return new WaitForSeconds(teleportDuration);
+        }
     }
 }
