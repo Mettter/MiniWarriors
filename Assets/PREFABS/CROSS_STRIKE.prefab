@@ -124,7 +124,7 @@ MonoBehaviour:
   destroySelfAfterCollision: 0
   noCondition: 1
   deathDelay: 0.55
-  destroyOnlySelf: 1
+  destroyOnlySelf: 0
 --- !u!114 &4714514136380973604
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,6 +142,9 @@ MonoBehaviour:
   projectileParticles: {fileID: 0}
   isPiersesThoughTarget: 1
   isIgnoresArmorArrow: 0
+  isProjectileStun: 0
+  stunAmount: 2
+  isDamagesMult: 0
 --- !u!61 &1124773936632766956
 BoxCollider2D:
   m_ObjectHideFlags: 0

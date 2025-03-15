@@ -28,23 +28,5 @@ public class TpToSpawn : MonoBehaviour
     private void Update()
     {
         // Check for the P key press to destroy barriers
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            // Find and destroy all OtherTeamBarrier1 and OtherTeamBarrier2 objects
-            GameObject[] barriers1 = GameObject.FindGameObjectsWithTag("OtherTeamBarrier1");
-            GameObject[] barriers2 = GameObject.FindGameObjectsWithTag("OtherTeamBarrier2");
-
-            foreach (GameObject barrier in barriers1)
-            {
-                Destroy(barrier);
-            }
-
-            foreach (GameObject barrier in barriers2)
-            {
-                Destroy(barrier);
-            }
-
-            Debug.Log("Barriers destroyed upon P key press!");
-        }
     }
 }

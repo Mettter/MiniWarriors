@@ -123,7 +123,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   destroySelfAfterCollision: 0
   noCondition: 1
-  deathDelay: 0.4
+  deathDelay: 0.35
   destroyOnlySelf: 1
 --- !u!114 &4640891475088022460
 MonoBehaviour:
@@ -144,6 +144,7 @@ MonoBehaviour:
   isIgnoresArmorArrow: 0
   isProjectileStun: 1
   stunAmount: 4.5
+  isDamagesMult: 0
 --- !u!61 &5852933782466202782
 BoxCollider2D:
   m_ObjectHideFlags: 0

@@ -26,7 +26,7 @@ public class QUEEN_PASSIVE : MonoBehaviour
 
     private void Start()
     {
-        // Start the healing coroutine
+        // Start the healing coroutine, but healing will only happen if "P" is pressed
         StartCoroutine(HealAlliesPeriodically());
     }
 
@@ -103,20 +103,23 @@ public class QUEEN_PASSIVE : MonoBehaviour
         {
             yield return new WaitForSeconds(healRecharge);
 
-            // Detect objects within the boost zone
-            Vector2 center = new Vector2(transform.position.x, transform.position.y + yOffset);
-            Collider2D[] hitObjects = Physics2D.OverlapCircleAll(center, radius);
-
-            foreach (Collider2D obj in hitObjects)
+            if (hasPressedP) // Only heal if "P" has been pressed
             {
-                // Check if the object's tag matches this object's tag
-                if (obj.CompareTag(gameObject.tag))
+                // Detect objects within the boost zone
+                Vector2 center = new Vector2(transform.position.x, transform.position.y + yOffset);
+                Collider2D[] hitObjects = Physics2D.OverlapCircleAll(center, radius);
+
+                foreach (Collider2D obj in hitObjects)
                 {
-                    HealthSystem healthSystem = obj.GetComponent<HealthSystem>();
-                    if (healthSystem != null)
+                    // Check if the object's tag matches this object's tag
+                    if (obj.CompareTag(gameObject.tag))
                     {
-                        healthSystem.Heal(healAmount);
-                        Debug.Log($"{obj.name} from the same team was healed by {healAmount}. Current health: {healthSystem.currentHealth}");
+                        HealthSystem healthSystem = obj.GetComponent<HealthSystem>();
+                        if (healthSystem != null)
+                        {
+                            healthSystem.Heal(healAmount);
+                            Debug.Log($"{obj.name} from the same team was healed by {healAmount}. Current health: {healthSystem.currentHealth}");
+                        }
                     }
                 }
             }

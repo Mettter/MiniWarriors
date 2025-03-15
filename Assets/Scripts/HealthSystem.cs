@@ -5,14 +5,26 @@ public class HealthSystem : MonoBehaviour
 {
     public float maxHealth = 100f;   // Maximum health
     public float currentHealth;     // Current health
-    public float armorPoints = 10f; // Armor points
-    public bool isTank = false;     // If true, this entity is a tank and will regenerate mana on damage
+    public float armorPoints = 10f;
+    public float maxCursePoints = 10f;
+    public float currentCursePoints = 10f; // Armor points
+    public bool isTank = false;  
+    public bool isInvincibleInvisible = false;    // If true, this entity is a tank and will regenerate mana on damage
     public float tankManaAmount = 5f; 
     public bool staysAfterDeath = false; 
     public float afterlifeAmount = 0f; // The amount of mana added to the currentMana when damage is taken (only for tank)
 
+    [SerializeField] public bool GoesRampage = false;
+    [SerializeField] public float RampageHealth = 0;
+    [SerializeField] public float YOFFSETVALUE;
+    [SerializeField] public GameObject prefab;
+    [SerializeField] public bool OverHeals = false; 
+    [SerializeField] public int OverHealAmount = 0;
+
+    public bool alreadySpawned = false;
+
     public GameObject healthParticles;
-    public float speedOfBattle = 2f;  // Reference to the health particles prefab
+    public float speedOOfBattle = 3f;  // Reference to the health particles prefab
     private Animator animator;
     private ManaSystem manaSystem; 
     public GameObject ADDBlockParticles;// Reference to the ManaSystem script
@@ -36,15 +48,16 @@ public class HealthSystem : MonoBehaviour
 
     private void Start()
     {
-        if (healthMaxed == false && isPrefab == false)// Initialize current health to max health
+        if (healthMaxed == false)// Initialize current health to max health
         {
-            maxHealth *= speedOfBattle;
+            maxHealth *= speedOOfBattle * 2;
             currentHealth = maxHealth;
 
             currentHealth = maxHealth;
             Debug.Log($"{gameObject.name} spawned with {currentHealth} health and {armorPoints} armor.");
             healthMaxed = true;
         }   
+        currentCursePoints = 0;
         // Get the Animator component
         animator = GetComponent<Animator>();
         if (animator == null)
@@ -72,6 +85,10 @@ public class HealthSystem : MonoBehaviour
                 Debug.LogWarning("ManaSystem component is missing on tank!");
             }
         }
+        if(isPrefab)
+        {
+            hasPressedP = true;  
+        }
     }
 
     private void Update()
@@ -88,6 +105,36 @@ public class HealthSystem : MonoBehaviour
     {
         invincibilityTimer -= Time.deltaTime;
     }
+        if (currentHealth <= RampageHealth && GoesRampage && !alreadySpawned)
+    {
+        // Get the parent's tag
+        string parentTag = gameObject.tag;
+
+        // Set the spawn position with the YOFFSETVALUE
+        Vector3 spawnPosition = new Vector3(transform.position.x, transform.position.y + YOFFSETVALUE, transform.position.z);
+        
+        // Instantiate the prefab at the spawn position
+        GameObject spawnedPrefab = Instantiate(prefab, spawnPosition, Quaternion.identity);
+        
+        // Set the spawned prefab's tag to match the parent's tag
+        spawnedPrefab.tag = parentTag;
+        
+        // Mark as already spawned
+        alreadySpawned = true;
+    }
+        if(maxCursePoints <= currentCursePoints && staysAfterDeath == false)
+        {
+            Die(afterlifeAmount);
+        }
+        else if (maxCursePoints <= currentCursePoints && staysAfterDeath == true)
+    {
+        if (healthParticles != null)
+        {
+            Instantiate(healthParticles, transform.position, Quaternion.identity);
+        }
+        Die(afterlifeAmount);
+    }
+
     }
 
     public void TakeDamage(float damageAmount, bool isIgnoresArmor = false)
@@ -96,6 +143,11 @@ public class HealthSystem : MonoBehaviour
     if (isInvincibleAfterTakingDamage && invincibilityTimer > 0)
     {
         Debug.Log($"{gameObject.name} is invincible! Damage blocked.");
+        return;
+    }
+
+    if (isInvincibleInvisible && nearestEnemy.isInvisible)
+    {
         return;
     }
 
@@ -201,6 +253,34 @@ public class HealthSystem : MonoBehaviour
         {
             Instantiate(ADDBlockParticles, transform.position, Quaternion.identity);
         }
+    }
+    public void AddCurse(float curseAmount)
+    {
+        currentCursePoints += curseAmount;
+    }
+
+    public void AddArmor(int ArmorAmount, int boostDurationArmor)
+    {
+        // Add armor to the object
+        armorPoints += ArmorAmount;
+
+        // Log armor addition for debugging
+        Debug.Log($"{gameObject.name} gained {ArmorAmount} armor. Current armor: {armorPoints}");
+
+        // Start the coroutine to remove the armor after the duration
+        StartCoroutine(RemoveArmorAfterDuration(boostDurationArmor, ArmorAmount));
+    }
+
+    private IEnumerator RemoveArmorAfterDuration(int duration, float armorAmount)
+    {
+        // Wait for the duration specified
+        yield return new WaitForSeconds(duration);
+
+        // Remove the added armor after the specified time
+        armorPoints -= armorAmount;
+
+        // Log the removal of armor for debugging
+        Debug.Log($"{gameObject.name} lost {armorAmount} armor. Current armor: {armorPoints}");
     }
 
     private void Die(float afterlifeAmount)

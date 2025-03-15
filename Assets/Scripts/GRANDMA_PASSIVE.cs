@@ -1,52 +1,38 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GrandmaBoost : MonoBehaviour
 {
     [Header("Boost Settings")]
-    [SerializeField] private float rangeBoostAmount = 2f; // Range boost amount
-    [SerializeField] private float attackSpeedBoostAmount = 0.5f; // Attack speed boost amount (lower value means faster attacks)
-    [SerializeField] private float attackSpeedBoostDuration = 1f; // Attack speed boost duration
-    [SerializeField] private float rangeBoostDuration = 1f; // Duration of the range boost
-    [SerializeField] private float boostDuration = 1f; // Duration of the general boost
-    [SerializeField] private float radius = 3f; // Radius of the boost zone
-    [SerializeField] private float yOffset = 1f; // Y offset for the circle's position
-    [SerializeField] private float armorBoostValue = 5f; // Armor boost value
+    [SerializeField] private float rangeBoostAmount = 2f;
+    [SerializeField] private float attackSpeedBoostAmount = 0.5f;
+    [SerializeField] private float attackSpeedBoostDuration = 1f;
+    [SerializeField] private float rangeBoostDuration = 1f;
+    [SerializeField] private float boostDuration = 1f;
+    [SerializeField] private float radius = 3f;
+    [SerializeField] private float yOffset = 1f;
+    [SerializeField] private float armorBoostValue = 5f;
+    [SerializeField] private bool onlyRangers = true;
 
     [Header("Visual Settings")]
-    [SerializeField] private Color boostZoneColor = new Color(0.5f, 0f, 0.5f); // Purple color (RGB: 128, 0, 128)
+    [SerializeField] private Color boostZoneColor = new Color(0.5f, 0f, 0.5f);
 
-    private bool hasPressedP = false; // Tracks whether the player has pressed the "P" key
-
-    private void Start()
-    {
-        // Start the coroutine to check for targets every second
-        StartCoroutine(SeekTargets());
-    }
+    private bool hasPressedP = false;
 
     private void Update()
     {
-        // Check if "P" key is pressed, and if not already pressed
-        if (Input.GetKeyDown(KeyCode.P))
+        if (Input.GetKeyDown(KeyCode.P) && !hasPressedP)
         {
-            hasPressedP = true; // Set to true when the player presses "P"
-            Debug.Log("P key pressed. Attack Speed Boost will now be applied.");
+            hasPressedP = true;
+            Debug.Log("P key pressed. Boost will be applied after 1 second.");
+            StartCoroutine(ApplyBoostOnce()); // Apply boost only once after a delay
         }
     }
 
-    private IEnumerator SeekTargets()
+    private IEnumerator ApplyBoostOnce()
     {
-        while (true)
-        {
-            ApplyBoosts();
-            yield return new WaitForSeconds(1f); // Wait for 1 second before seeking again
-        }
-    }
+        yield return new WaitForSeconds(1f); // Delay before applying boost
 
-    private void ApplyBoosts()
-    {
-        // Detect objects within the boost zone
         Vector2 center = new Vector2(transform.position.x, transform.position.y + yOffset);
         Collider2D[] hitObjects = Physics2D.OverlapCircleAll(center, radius);
 
@@ -54,22 +40,18 @@ public class GrandmaBoost : MonoBehaviour
         {
             if (obj.CompareTag(gameObject.tag))
             {
-                // Apply range boost (always applies, no P key check)
                 NearestEnemy enemy = obj.GetComponent<NearestEnemy>();
-                if (enemy != null && enemy.isRanger) // Only apply to objects with isRanger = true
+                if (enemy != null)
                 {
-                    enemy.RangeBoost(rangeBoostAmount, rangeBoostDuration); // Range boost logic
+                    if (onlyRangers && enemy.isRanger || !onlyRangers)
+                    {
+                        enemy.RangeBoost(rangeBoostAmount, rangeBoostDuration);
+                        enemy.AttackSpeedBoost(attackSpeedBoostAmount, attackSpeedBoostDuration);
+                    }
                 }
 
-                // Apply attack speed boost only if P key has been pressed
-                if (enemy != null && enemy.isRanger && hasPressedP) // Only apply if P has been pressed
-                {
-                    enemy.AttackSpeedBoost(attackSpeedBoostAmount, attackSpeedBoostDuration);
-                }
-
-                // Apply armor boost (always applies, as this is not conditionally based on isRanger)
                 HealthSystem healthSystem = obj.GetComponent<HealthSystem>();
-                if (healthSystem != null)
+                if (healthSystem != null && !IsArmorBoostActive(healthSystem))
                 {
                     healthSystem.armorPoints += armorBoostValue;
                     Debug.Log($"{obj.name} received {armorBoostValue} armor boost. Current armor: {healthSystem.armorPoints}");
@@ -82,13 +64,20 @@ public class GrandmaBoost : MonoBehaviour
     private IEnumerator RemoveArmorBoost(HealthSystem healthSystem, float armorBoostValue, float duration)
     {
         yield return new WaitForSeconds(duration);
-        healthSystem.armorPoints -= armorBoostValue;
-        Debug.Log($"{healthSystem.gameObject.name} lost {armorBoostValue} armor boost. Current armor: {healthSystem.armorPoints}");
+        if (healthSystem != null)
+        {
+            healthSystem.armorPoints -= armorBoostValue;
+            Debug.Log($"{healthSystem.gameObject.name} lost {armorBoostValue} armor boost. Current armor: {healthSystem.armorPoints}");
+        }
+    }
+
+    private bool IsArmorBoostActive(HealthSystem healthSystem)
+    {
+        return healthSystem.armorPoints >= armorBoostValue; // Prevent multiple boosts from stacking
     }
 
     private void OnDrawGizmos()
     {
-        // Draw the circle to visualize the boost zone with purple color
         Gizmos.color = boostZoneColor;
         Gizmos.DrawWireSphere(new Vector3(transform.position.x, transform.position.y + yOffset, transform.position.z), radius);
     }

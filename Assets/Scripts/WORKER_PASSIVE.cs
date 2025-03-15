@@ -4,9 +4,8 @@ using UnityEngine;
 public class GrandpaBoost : MonoBehaviour
 {
     [Header("Boost Settings")]
-    [SerializeField] private float radius = 3f; // Radius of the detection zone (currently unused)
     [SerializeField] private GameObject spawnPrefab; // Prefab to spawn
-    [SerializeField] private Transform spawnPoint; // The transform of the spawn point
+    [SerializeField] private Vector2[] spawnCoordinates; // Array of spawn coordinates (x, y)
     [SerializeField] private float yOffset = -0.25f; // Y offset for the spawn position, adjustable in Inspector
 
     [Header("Visual Settings")]
@@ -19,11 +18,11 @@ public class GrandpaBoost : MonoBehaviour
         // Check if the P key has been pressed and if the prefab hasn't been spawned yet
         if (Input.GetKeyDown(KeyCode.P) && !hasSpawned)
         {
-            StartCoroutine(SpawnPrefabWithDelay());
+            StartCoroutine(SpawnPrefabsWithDelay());
         }
     }
 
-    private IEnumerator SpawnPrefabWithDelay()
+    private IEnumerator SpawnPrefabsWithDelay()
     {
         // Wait for 0.1 seconds before spawning
         yield return new WaitForSeconds(0.1f);
@@ -31,33 +30,44 @@ public class GrandpaBoost : MonoBehaviour
         // Check if this object has been destroyed during the delay
         if (this == null) yield break;
 
-        if (spawnPoint == null)
+        if (spawnCoordinates.Length == 0)
         {
-            Debug.LogError("Spawn Point is not assigned. Please assign a spawn point in the Inspector.");
+            Debug.LogError("No spawn coordinates assigned. Please assign spawn coordinates in the Inspector.");
             yield break;
         }
 
-        // Adjust the spawn position with the Y offset
-        Vector3 adjustedSpawnPosition = spawnPoint.position;
-        adjustedSpawnPosition.y += yOffset;
+        foreach (Vector2 coordinate in spawnCoordinates)
+        {
+            // Adjust the spawn position with the Y offset
+            Vector2 adjustedSpawnPosition = coordinate;
+            adjustedSpawnPosition.y += yOffset;
 
-        // Spawn the prefab at the adjusted position
-        GameObject spawnedObject = Instantiate(spawnPrefab, adjustedSpawnPosition, spawnPoint.rotation);
+            // Spawn the prefab at the adjusted position (convert Vector2 to Vector3)
+            Vector3 spawnPosition3D = new Vector3(adjustedSpawnPosition.x, adjustedSpawnPosition.y, 0);
+            GameObject spawnedObject = Instantiate(spawnPrefab, spawnPosition3D, Quaternion.identity);
 
-        // Set the same tag as the spawner object
-        spawnedObject.tag = gameObject.tag;
+            // Set the same tag as the spawner object
+            spawnedObject.tag = gameObject.tag;
 
-        // Log spawn information
-        Debug.Log($"Spawned prefab at spawn point with Y offset: {spawnPoint.name}, Position: {adjustedSpawnPosition}");
+            // Log spawn information
+            Debug.Log($"Spawned prefab at position: {spawnPosition3D}");
+        }
 
-        // Mark that the prefab has been spawned
+        // Mark that the prefabs have been spawned
         hasSpawned = true;
     }
 
     private void OnDrawGizmos()
     {
-        // Draw the detection radius in the editor for visualization
-        Gizmos.color = boostZoneColor;
-        Gizmos.DrawWireSphere(transform.position, radius);
+        // Draw gizmos for all spawn coordinates
+        if (spawnCoordinates != null)
+        {
+            foreach (Vector2 coordinate in spawnCoordinates)
+            {
+                Gizmos.color = Color.red;
+                Vector3 gizmoPosition = new Vector3(coordinate.x, coordinate.y + yOffset, 0);
+                Gizmos.DrawWireSphere(gizmoPosition, 0.1f);
+            }
+        }
     }
 }

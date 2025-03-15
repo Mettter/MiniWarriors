@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 6102907618427867905}
   - component: {fileID: 7580325812860111659}
   - component: {fileID: 5096714020537617064}
-  - component: {fileID: 1691908789801633475}
   - component: {fileID: 1660488695796335976}
   m_Layer: 0
   m_Name: MAGIC_SPHERE
@@ -100,13 +99,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff0d719c502014483b1cae180b41d2be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 2
+  damage: 3
   teamTag: 
   projectileParticles: {fileID: 0}
   isPiersesThoughTarget: 0
   isIgnoresArmorArrow: 0
   isProjectileStun: 0
   stunAmount: 2
+  isDamagesMult: 0
 --- !u!114 &5096714020537617064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,27 +122,15 @@ MonoBehaviour:
   destroySelfAfterCollision: 0
   noCondition: 0
   deathDelay: 0
-  destroyOnlySelf: 0
+  destroyOnlySelf: 1
+  destroyafterP: 0
+  pKeyPressedTime: 0
+  rangeV: 0.1
   prefabToSpawn: {fileID: 817241988354453707, guid: 8a9f6b9e153ae41a086f37203538590e, type: 3}
   spawnYOffset: 0
-  spawnInCollision: 1
-  spawnNoMatterWhat: 1
---- !u!114 &1691908789801633475
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5177151331554429091}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b199b1fa393a4d5aab2dbb55736213c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  destroySelfAfterCollision: 0
-  noCondition: 0
-  deathDelay: 0
-  destroyOnlySelf: 1
+  spawnInCollision: 0
+  spawnNoMatterWhat: 0
+  spawnOnDestroy: 1
 --- !u!58 &1660488695796335976
 CircleCollider2D:
   m_ObjectHideFlags: 0

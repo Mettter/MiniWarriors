@@ -6,12 +6,18 @@ public class DestroyAndSpawnOnCollision : MonoBehaviour
     [SerializeField] private bool destroySelfAfterCollision = false; // Destroy functionality is enabled only if this is true
     [SerializeField] private bool noCondition = false; // Destroy itself unconditionally
     [SerializeField] private float deathDelay = 0f; // Delay before destruction
-    [SerializeField] private bool destroyOnlySelf = false; // Destroy only this object on collision
+    [SerializeField] private bool destroyOnlySelf = false;
+    
+    [SerializeField] private bool destroyafterP = false; // Destroy only this object on collision
+
+    [SerializeField] private float pKeyPressedTime = 0;
+    [SerializeField] private float rangeV = 0.1f;
 
     [Header("Spawn Settings")]
     [SerializeField] private GameObject prefabToSpawn; // The prefab to spawn
     [SerializeField] private float spawnYOffset = 0f; // Vertical offset for the spawn position
-    [SerializeField] private bool spawnInCollision = false; // Spawn in the center of the object collided with
+    [SerializeField] private bool spawnInCollision = false;
+    [SerializeField] private bool inhabitTag = true; // Spawn in the center of the object collided with
     [SerializeField] private bool spawnNoMatterWhat = false; // Always spawn the prefab, regardless of other conditions
     [SerializeField] private bool spawnOnDestroy = false; // Spawn prefab when the host object is destroyed
 
@@ -25,6 +31,7 @@ public class DestroyAndSpawnOnCollision : MonoBehaviour
         {
             Destroy(gameObject, deathDelay);
         }
+        pKeyPressedTime = 0f;
     }
 
     private void Update()
@@ -34,7 +41,9 @@ public class DestroyAndSpawnOnCollision : MonoBehaviour
         {
             isPKeyPressed = true;
             Debug.Log("P key was pressed. Collision and trigger now active.");
+            pKeyPressedTime = Time.time;
         }
+
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -75,11 +84,11 @@ public class DestroyAndSpawnOnCollision : MonoBehaviour
         if (!isPKeyPressed) return;
 
         // Destroy the collided object after delay
+        
         Destroy(collidedObject, deathDelay);
         Debug.Log($"Scheduled destruction for {collidedObject.name}");
-
-        // Optionally destroy the object with this script
-        Destroy(gameObject, deathDelay);
+         Destroy(gameObject, deathDelay);
+        
     }
 
     private void OnDestroy()
@@ -95,16 +104,38 @@ public class DestroyAndSpawnOnCollision : MonoBehaviour
     }
 
     private void SpawnPrefab(Vector3 position)
+{
+    if (prefabToSpawn != null)
     {
-        if (prefabToSpawn != null)
+
+        // Check if this object is colliding with a "Player" tagged object
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, rangeV);
+        foreach (Collider2D col in colliders)
         {
-            GameObject spawnedObject = Instantiate(prefabToSpawn, position, Quaternion.identity);
-            spawnedObject.tag = gameObject.tag; // Assign the same tag to the spawned object
-            Debug.Log($"Spawned {prefabToSpawn.name} at {position}");
+            if (col.CompareTag("Player"))
+            {
+                Debug.Log("Cannot spawn prefab: Colliding with Player.");
+                return; // Prevent spawning
+            }
         }
-        else
+
+        GameObject spawnedObject = Instantiate(prefabToSpawn, position, Quaternion.identity);
+        spawnedObject.tag = gameObject.tag; // Assign the same tag to the spawned object
+
+        // Ensure the collider is not set as trigger
+        Collider2D collider = spawnedObject.GetComponent<Collider2D>();
+        if (collider != null)
         {
-            Debug.LogWarning("Prefab to spawn is not assigned!");
+            collider.isTrigger = false; // Set to false or true based on your requirements
         }
+
+        Debug.Log($"Spawned {prefabToSpawn.name} at {position}");
     }
+    else
+    {
+        Debug.LogWarning("Prefab to spawn is not assigned!");
+    }
+}
+
+
 }

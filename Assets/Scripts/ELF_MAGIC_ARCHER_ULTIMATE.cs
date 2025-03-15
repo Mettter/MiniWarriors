@@ -116,7 +116,7 @@ public class ProjectileShooter : MonoBehaviour
             yield break;
 
         // Deduct ultimate mana instead of setting current mana to 0
-        manaSystem.currentMana = 0;
+        manaSystem.currentMana -= ultimateMana;
         isCurrentlyAttacking = true;
 
         // Calculate the spawn position with both x and y offsets right before shooting
@@ -170,11 +170,14 @@ public class ProjectileShooter : MonoBehaviour
 
         float farthestDistance = -Mathf.Infinity;
         targetEnemy = null;
+        
 
         foreach (GameObject target in potentialTargets)
         {
             // Skip objects with a Projectile component
             if (target.GetComponent<Projectile>() != null) continue;
+
+            if (target.CompareTag("Untarget")) continue;
 
             float distance = Vector3.Distance(transform.position, target.transform.position);
             if (distance > farthestDistance)

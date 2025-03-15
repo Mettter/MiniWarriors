@@ -1,33 +1,24 @@
 using UnityEngine;
 
-public class AttackSpeedBoost : MonoBehaviour
+public class DeskSwapper : MonoBehaviour
 {
-    // Reference to the NearestEnemy script
-    private NearestEnemy nearestEnemy;
+    public GameObject desk1Object;
+    public GameObject desk2Object;
 
-    private float boostAmount = 999f;
-    private float boostDuration = 10f;
-
-    void Start()
+    private void OnMouseDown()
     {
-        // Get the NearestEnemy component from the same GameObject this script is attached to
-        nearestEnemy = GetComponent<NearestEnemy>();
-    }
-
-    void Update()
-    {
-        // Check if the 'K' key is pressed
-        if (Input.GetKeyDown(KeyCode.K))
+        // Check if the host clicked on the desk
+        if (desk1Object.activeSelf)
         {
-            // Apply the attack speed boost if nearestEnemy is assigned
-            if (nearestEnemy != null)
-            {
-                nearestEnemy.AttackSpeedBoost(boostAmount, boostDuration);
-            }
-            else
-            {
-                Debug.LogError("NearestEnemy component not found on this GameObject.");
-            }
+            // If desk1 is active, deactivate it and activate desk2
+            desk1Object.SetActive(false);
+            desk2Object.SetActive(true);
+        }
+        else if (desk2Object.activeSelf)
+        {
+            // If desk2 is active, deactivate it and activate desk1
+            desk2Object.SetActive(false);
+            desk1Object.SetActive(true);
         }
     }
 }

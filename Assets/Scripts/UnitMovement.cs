@@ -5,20 +5,36 @@ public class NearestEnemy : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] public float moveSpeed = 2f;
+    [SerializeField] public float moveSpeedSlower = 2f;
+    [SerializeField] private bool stopsAfterHit = false;
+    private bool hitDetected = false;
+    private Collider2D playerCollider;
 
     [Header("Attack Settings")]
     [SerializeField] private float attackRange = 1f;
     [SerializeField] private float attackDelay = 0.5f;
-    [SerializeField] private float attackCooldown = 1.5f;
+    [SerializeField] public float attackCooldown = 1.5f;
     [SerializeField] private int attackDamage = 10;
     [SerializeField] private float yOffset = 0f;
     [SerializeField] public bool isRanger = false;
     [SerializeField] private float originalAttackRange = 1f;
-    [SerializeField] private float minimalAttackSpeed = 1f;
+    [SerializeField] public float minimalAttackSpeed = 1f;
     [SerializeField] private bool isAttackSplash = false;
     [SerializeField] private bool targetsFarthestEnemy = false;
     [SerializeField] private bool isGrandma = false;
     [SerializeField] private bool isNotWalking = false;
+    [SerializeField] public bool isShovelPlaki = false;
+
+    [Header("Invisibility Settings")]
+    public GameObject INVISPARTICLES; // Prefab for invisibility particles
+    public float invisibilityParticlesOffset = 0.5f;
+    [SerializeField] public bool isInvisible = false;
+    [SerializeField] private float invisibleTimer = 0f;
+
+    private float timer = 0f;
+    private SpriteRenderer spriteRenderer;
+    private Color originalColor;
+
     [SerializeField] private bool dashesAtStart = false;
     [SerializeField] private bool healthWhenDealsDamage = false;
     [SerializeField] private int attackRegen = 10;
@@ -36,7 +52,7 @@ public class NearestEnemy : MonoBehaviour
     public bool isAttackCauseBleed = false; // Determines if the attack causes bleed
     [Range(1f, 100f)]
     public float bleedStrength = 10f;      // Damage dealt by the bleed effect
-    [Range(0.5f, 10f)]
+    [Range(0.5f, 100f)]
     public float bleedDuration = 3f; 
     private float targetChangeCooldown = 10f; // Time in seconds before switching targets
     private float timeSinceLastTargetChange = 0f; // Track time since last target change
@@ -108,6 +124,10 @@ public class NearestEnemy : MonoBehaviour
             isCHooseFarthesEnemy = true;
         }
     
+        moveSpeed /=moveSpeedSlower;
+
+        SetVisibility(true);
+
         float originalAttackSpeed = attackCooldown;
         originalAttackRange = attackRange;
         animator = GetComponent<Animator>();
@@ -122,6 +142,15 @@ public class NearestEnemy : MonoBehaviour
                 Debug.LogWarning("ManaSystem component is missing on the GameObject!");
             }
         }
+        if(isPrefab)
+    {
+        pKeyPressed = true;
+        canMove = true;
+        if (dashesAtStart == true)
+        {
+            StartCoroutine(Dash());
+        }
+    }
     }
 
     private void Update()
@@ -135,14 +164,51 @@ public class NearestEnemy : MonoBehaviour
         }
     }
 
+    if(Input.GetKeyDown(KeyCode.P))
+    {
+        pKeyPressed = true;
+        SetInvisible(invisibleTimer);
+    }
+
+    if(isPrefab)
+    {
+        pKeyPressed = true;
+        SetInvisible(invisibleTimer);
+    }
+
+
+    if (isInvisible && pKeyPressed)
+    {
+        timer += Time.deltaTime; // Increase the timer by the time passed since last frame
+
+        // Check if 1 second has passed
+        if (timer >= 1f)
+        {
+            invisibleTimer -= 1f; // Decrease the invisibleTimer by 1 each second
+            timer = 0f; // Reset the timer
+
+            if (pKeyPressed)
+            {
+                SpawnInvisibilityParticles();
+            }
+
+            // If the invisibleTimer reaches 0, make isInvisible false
+            if (invisibleTimer <= 0f)
+            {
+                isInvisible = false;
+                invisibleTimer = 0f;
+                SetVisibility(true); // Reset the timer
+            }
+        }
+    }
+    
+
     if (!canMove && Input.GetKeyDown(KeyCode.P))
     {
-        canMove = true;
-        Debug.Log("Movement enabled!");
-        if (dashesAtStart == true)
-        {
-            StartCoroutine(Dash());
-        }
+
+        
+        StartCoroutine(EnableMovementWithDelay());
+        
     }
 
     
@@ -227,8 +293,15 @@ if (bulletCount > 0 && goesRangedif0Bullets == true && isConvertedToRanged == fa
             moveSpeed = 0;
     }
 
-    if (attackCooldown < minimalAttackSpeed)    
+    if (isShovelPlaki)   
+    {
         attackCooldown = minimalAttackSpeed;
+    }
+
+    if (attackCooldown < minimalAttackSpeed)
+    {
+        attackCooldown = minimalAttackSpeed;
+    }
 
     if (nearestEnemy == null && targetsFarthestEnemy == false)
 {
@@ -308,6 +381,28 @@ else
     }
 }
 
+    public void SetInvisible(float duration)
+{ // Make the object invisible
+    invisibleTimer = duration;
+    SetVisibility(false); // Set the timer to the specified duration
+}
+
+    private void SpawnInvisibilityParticles()
+    {
+        if (INVISPARTICLES == null)
+        {
+            Debug.LogError("INVISPARTICLES prefab is not assigned!");
+            return;
+        }
+
+        // Calculate the spawn position with the Y offset
+        Vector3 spawnPosition = transform.position;
+        spawnPosition.y += invisibilityParticlesOffset;
+
+        // Instantiate the INVISPARTICLES object at the adjusted position
+        Instantiate(INVISPARTICLES, spawnPosition, Quaternion.identity);
+    }
+
     public void ResetTarget()
     {
         nearestEnemy = null;  // Reset the nearest enemy Transform
@@ -340,6 +435,28 @@ else
         Debug.Log($"{gameObject.name} speed boost ended. Speed reset to {moveSpeed}.");
     }
 
+        private void SetVisibility(bool visible)
+{
+    if (spriteRenderer != null)
+    {
+        Color color = spriteRenderer.color;
+
+        if (visible)
+        {
+            // Restore original opacity (fully visible)
+            color.a = originalColor.a;
+        }
+        else
+        {
+            // Set alpha to 0.5 for 50% transparency
+            color.a = 0.5f;
+        }
+
+        spriteRenderer.color = color; // Apply the transparency change
+    }
+
+}
+
 private void FindNearestAlly()
 {
     string targetTag = gameObject.CompareTag("Team1") ? "Team1" : "Team2";
@@ -352,8 +469,23 @@ private void FindNearestAlly()
         // Skip the object if it's the same as the one this script is attached to
         if (obj == gameObject) continue;
 
+        // Skip objects with the tag "Untarget"
+        if (obj.CompareTag("Untarget")) continue;
+
         // Skip objects that have the Projectile script
         if (obj.GetComponent<Projectile>() != null) continue;
+
+        // Skip objects that have the Invisible component
+        if (obj.GetComponent<Invisible>() != null) continue;
+
+        // Get the NearestEnemy (UnitMovement) script of the potential ally
+        NearestEnemy unitMovement = obj.GetComponent<NearestEnemy>();
+
+        // If NearestEnemy exists and isInvisible is false, we continue searching (i.e., skip this one if it's invisible)
+        if (unitMovement != null && unitMovement.isInvisible)
+        {
+            continue;  // Skip this object if its isInvisible is true (i.e., it's invisible)
+        }
 
         // Get the NearestEnemy component of the potential ally
         NearestEnemy enemy = obj.GetComponent<NearestEnemy>();
@@ -379,8 +511,6 @@ private void FindNearestAlly()
         nearestEnemy = closestObject.transform; // Now the nearest ally is correctly assigned
     }
 }
-
-
 
     public void Stun(float duration)
     {
@@ -478,6 +608,19 @@ private void FindNearestAlly()
             continue;  // Skip this object if it has the Projectile script
         }
 
+        if (obj.GetComponent<Invisible>() != null)
+        {
+            continue;  // Skip this object if it has the Projectile script
+        }
+
+        if (obj.CompareTag("Untarget")) continue;
+
+        NearestEnemy unitMovement = obj.GetComponent<NearestEnemy>();
+        if (unitMovement != null && unitMovement.isInvisible)
+        {
+            continue;  // Skip this object if its isInvisible is true
+        }
+
         float distance = Vector2.Distance(transform.position, obj.transform.position);
 
         if (distance < shortestDistance)
@@ -507,6 +650,19 @@ private void FindNearestAlly()
         if (obj.GetComponent<Projectile>() != null)
         {
             continue;  // Skip this object if it has the Projectile script
+        }
+
+        if (obj.GetComponent<Invisible>() != null)
+        {
+            continue;  // Skip this object if it has the Projectile script
+        }
+
+        if (obj.CompareTag("Untarget")) continue;
+
+        NearestEnemy unitMovement = obj.GetComponent<NearestEnemy>();
+        if (unitMovement != null && unitMovement.isInvisible)
+        {
+            continue;  // Skip this object if its isInvisible is true
         }
 
         float distance = Vector2.Distance(transform.position, obj.transform.position);
@@ -658,17 +814,32 @@ private IEnumerator Attack()
 
     GainMana();
     
-    if (healthWhenDealsDamage == true)
-    {
-        HealHp();
-    }
 
+    
     yield return new WaitForSeconds(attackCooldown);
+
 
 
     // Reset attack state after cooldown
     isAttacking = false;
+
 }
+
+    private IEnumerator EnableMovementWithDelay()
+    {
+        // Wait for 1 second
+        yield return new WaitForSeconds(1f);
+
+        // Enable movement
+        canMove = true;
+        Debug.Log("Movement enabled!");
+
+        // If dashesAtStart is true, start the Dash coroutine
+        if (dashesAtStart)
+        {
+            StartCoroutine(Dash());
+        }
+    }
 
 
     private IEnumerator RegenerateBulletsOverTime()
@@ -830,54 +1001,84 @@ private IEnumerator ShootProjectile()
 
 
 private IEnumerator Dash()
+{
+    yield return new WaitForSeconds(0.2f);
+
+    if (animator != null)
     {
-        yield return new WaitForSeconds(0.2f);
-        if (animator != null)
-        {
-            animator.SetBool("isDashing", true);
-            animator.SetBool("isWalking", false);
-        }
-        isDashing = true; // Set dashing state
-        originalPosition = transform.position; // Record the starting position
-
-        Collider2D playerCollider = GetComponent<Collider2D>(); // Get the Collider2D directly from this object
-
-        // Disable collisions if isDashCollidable is false
-        if (!isDashCollidable && playerCollider != null)
-        {
-            playerCollider.enabled = false;
-        }
-
-        float elapsed = 0f; // Timer for the dash
-        Vector2 targetPosition = originalPosition + new Vector2(dashDistance, 0); // Target position (X direction)
-
-        while (elapsed < dashDuration)
-        {
-            // Smoothly interpolate the object's position to the target position over the dash duration
-            transform.position = Vector2.Lerp(originalPosition, targetPosition, elapsed / dashDuration);
-            elapsed += Time.deltaTime; // Increment the timer
-            yield return null;
-        }
-
-        // Ensure the object ends exactly at the target position
-        transform.position = targetPosition;
-
-        // Re-enable collisions
-        if (!isDashCollidable && playerCollider != null)
-        {
-            playerCollider.enabled = true;
-        }
-
-        // Reset dashing state
-        isDashing = false;
-
-        // Set Animator parameter to false
-        if (animator != null)
-        {
-            animator.SetBool("isDashing", false);
-            animator.SetBool("isWalking", true);
-        }
+        animator.SetBool("isDashing", true);
+        animator.SetBool("isWalking", false);
     }
+
+    isDashing = true;
+    hitDetected = false; // Reset hit detection before dashing
+    originalPosition = transform.position;
+
+    // Disable collisions if dashing should be non-collidable
+    if (!isDashCollidable && playerCollider != null)
+    {
+        playerCollider.enabled = false;
+    }
+
+    float elapsed = 0f;
+    Vector2 targetPosition = originalPosition + new Vector2(dashDistance, 0);
+
+    while (elapsed < dashDuration)
+    {
+        transform.position = Vector2.Lerp(originalPosition, targetPosition, elapsed / dashDuration);
+        elapsed += Time.deltaTime;
+
+        // If a valid hit is detected, stop the dash immediately
+        if (stopsAfterHit && isDashCollidable && hitDetected)
+        {
+            break;
+        }
+
+        yield return null;
+    }
+
+    // Stop the dash at the current position if a hit was detected
+    if (stopsAfterHit && isDashCollidable && hitDetected)
+    {
+        targetPosition = transform.position;
+    }
+
+    transform.position = targetPosition; // Ensure the object stops correctly
+
+    // Re-enable collisions
+    if (!isDashCollidable && playerCollider != null)
+    {
+        playerCollider.enabled = true;
+    }
+
+    isDashing = false;
+
+    if (animator != null)
+    {
+        animator.SetBool("isDashing", false);
+        animator.SetBool("isWalking", true);
+    }
+}
+
+// Detect collision with enemies and stop dashing if conditions are met
+private void OnCollisionEnter2D(Collision2D collision)
+{
+    CheckCollision(collision.gameObject);
+}
+
+private void CheckCollision(GameObject obj)
+{
+    if (!isDashing || !isDashCollidable || !stopsAfterHit) return;
+
+    bool hasProjectileScript = obj.GetComponent<Projectile>() != null;
+    bool isEnemy = (CompareTag("Team1") && obj.CompareTag("Team2")) || (CompareTag("Team2") && obj.CompareTag("Team1"));
+
+    // Stop dashing ONLY if colliding with an enemy (opposite team) AND it's not a projectile
+    if (isEnemy && !hasProjectileScript)
+    {
+        hitDetected = true;
+    }
+}
 
 private IEnumerator WaitOneSecond()
 {
@@ -909,3 +1110,4 @@ private IEnumerator WaitOneSecond()
         Gizmos.DrawLine(transform.position, transform.position + new Vector3(dashDistance, 0, 0));
     }
 }
+

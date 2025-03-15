@@ -10,6 +10,11 @@ TagManager:
   - otherTeamBarrier1
   - OtherTeamBarrier1
   - Barrier
+  - untarget
+  - enemySide
+  - stoObject1
+  - stopObject
+  - stopObject1
   layers:
   - Default
   - TransparentFX

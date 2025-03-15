@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 6600292284917172270}
   - component: {fileID: 200026469293794823}
   - component: {fileID: 863741414036141396}
+  - component: {fileID: -1535525564121956290}
   m_Layer: 0
   m_Name: CHYCHELO_PREFAB
   m_TagString: Team1
@@ -152,6 +153,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 10
+  moveSpeedSlower: 2
+  stopsAfterHit: 0
   attackRange: 1
   attackDelay: 11000
   attackCooldown: 10000
@@ -164,7 +167,13 @@ MonoBehaviour:
   targetsFarthestEnemy: 0
   isGrandma: 0
   isNotWalking: 0
+  INVISPARTICLES: {fileID: 0}
+  invisibilityParticlesOffset: 0.5
+  isInvisible: 0
+  invisibleTimer: 0
   dashesAtStart: 0
+  healthWhenDealsDamage: 0
+  attackRegen: 10
   isIgnoringArmor: 0
   isPrefab: 0
   dashDistance: 5
@@ -174,6 +183,7 @@ MonoBehaviour:
   bleedStrength: 10
   bleedDuration: 3
   manaSystem: {fileID: 0}
+  healthSystem: {fileID: 0}
   manaPerAttack: 10
   projectilePrefab: {fileID: 0}
   initialProjectileSpeed: 5
@@ -181,6 +191,17 @@ MonoBehaviour:
   decayInterval: 0.5
   targetOffset: 0.5
   isPiercingProjectile: 0
+  needBullets: 0
+  bulletCount: 0
+  bulletPerSecond: 0
+  maxBullets: 0
+  bulletGainSpeed: 0
+  goesMeleif0Bullets: 0
+  meleAttackRange: 0
+  rangedAttackRange: 0
+  meleAttackCooldown: 0.5
+  rangedAttackCooldown: 0.5
+  goesRangedif0Bullets: 0
   spawnPosTeam1: {fileID: 0}
   spawnPosTeam2: {fileID: 0}
   isSupport: 0
@@ -201,19 +222,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4d9f3b8d4f7942858a4748c3c3a4a73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 40
-  currentHealth: 15
+  maxHealth: 30
+  currentHealth: 20
   armorPoints: 2
   isTank: 0
+  isInvincibleInvisible: 0
   tankManaAmount: 5
   staysAfterDeath: 0
   afterlifeAmount: 1
+  GoesRampage: 0
+  RampageHealth: 0
+  YOFFSETVALUE: 0
+  prefab: {fileID: 0}
+  alreadySpawned: 0
   healthParticles: {fileID: 4692989931688550306, guid: e13a05eb8802745cd90ff502dfa16b13, type: 3}
+  speedOOfBattle: 3
   ADDBlockParticles: {fileID: 0}
   blockCount: 0
   stunDuration: 2
   nearestEnemy: {fileID: 0}
   isPrefab: 1
+  isInvincibleAfterTakingDamage: 0
+  invincibilityDuration: 1
 --- !u!114 &6600292284917172270
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,3 +306,18 @@ CircleCollider2D:
   m_Offset: {x: 0, y: -0.25}
   serializedVersion: 2
   m_Radius: 0.25
+--- !u!114 &-1535525564121956290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2874365196185247337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 447f1425122ec45bd9152f48a52f5aac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  backlashObject: {fileID: 7600889229203850838, guid: 2eb80081091e742498b4870a2b2a37e2, type: 3}
+  spawnCooldown: 0.5
+  isPrefab: 1

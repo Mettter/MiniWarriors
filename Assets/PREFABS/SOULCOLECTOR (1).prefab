@@ -1,0 +1,342 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &824003865730168339
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2103690350798943864}
+  - component: {fileID: 2039865117861836464}
+  - component: {fileID: 5189882826196860896}
+  - component: {fileID: 937372563235584135}
+  - component: {fileID: 4932203041434644953}
+  - component: {fileID: 6410222186673682948}
+  - component: {fileID: 7026757229925610856}
+  - component: {fileID: 5901804180097312899}
+  - component: {fileID: 4155571376662923406}
+  - component: {fileID: 726941374504170789}
+  - component: {fileID: 8819616275303311292}
+  m_Layer: 0
+  m_Name: SOULCOLECTOR (1)
+  m_TagString: Team1
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2103690350798943864
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.25, y: -2.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &2039865117861836464
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 1
+  m_Sprite: {fileID: 21300000, guid: 738b4f794ad4d40d380c2be2064544d8, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 1, y: 1}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
+--- !u!95 &5189882826196860896
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: c605f7f16a8e3404687f8fa01f6eeff9, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!58 &937372563235584135
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: -0.25}
+  serializedVersion: 2
+  m_Radius: 0.25
+--- !u!50 &4932203041434644953
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 4
+--- !u!114 &6410222186673682948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9244b87631c745d5a752afc3dc42e7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 3
+  moveSpeedSlower: 2
+  stopsAfterHit: 0
+  attackRange: 0.7
+  attackDelay: 0
+  attackCooldown: 1
+  attackDamage: 14
+  yOffset: -0.25
+  isRanger: 0
+  originalAttackRange: 0.5
+  minimalAttackSpeed: 1
+  isAttackSplash: 1
+  targetsFarthestEnemy: 0
+  isGrandma: 0
+  isNotWalking: 0
+  isShovelPlaki: 1
+  INVISPARTICLES: {fileID: 0}
+  invisibilityParticlesOffset: 0.5
+  isInvisible: 0
+  invisibleTimer: 0
+  dashesAtStart: 0
+  healthWhenDealsDamage: 0
+  attackRegen: 5
+  isIgnoringArmor: 0
+  isPrefab: 1
+  dashDistance: 1.2
+  dashDuration: 0.15
+  isDashCollidable: 0
+  isAttackCauseBleed: 1
+  bleedStrength: 1
+  bleedDuration: 5
+  manaSystem: {fileID: 726941374504170789}
+  healthSystem: {fileID: 0}
+  manaPerAttack: 1
+  projectilePrefab: {fileID: 0}
+  initialProjectileSpeed: 5
+  speedDecay: 0.5
+  decayInterval: 0.5
+  targetOffset: 0.5
+  isPiercingProjectile: 0
+  needBullets: 0
+  bulletCount: 0
+  bulletPerSecond: 0
+  maxBullets: 0
+  bulletGainSpeed: 0
+  goesMeleif0Bullets: 0
+  meleAttackRange: 0
+  rangedAttackRange: 0
+  meleAttackCooldown: 0.5
+  rangedAttackCooldown: 0.5
+  goesRangedif0Bullets: 0
+  spawnPosTeam1: {fileID: 0}
+  spawnPosTeam2: {fileID: 0}
+  isSupport: 0
+  isStunned: 0
+  damageBoostP: {fileID: 4436579029263789, guid: 69a4c90bb33bb4a9f9a8b22849cb482c, type: 3}
+  speedBoostP: {fileID: 4228963771076439452, guid: f404dfd9c2cc9419d9bb3ac5515aa8ed, type: 3}
+  rangeBoostP: {fileID: 2674840633938978248, guid: 61a0a2b3b7b03486d8c59a314ebc2479, type: 3}
+  effectSpawnYOffset: -0.5
+--- !u!114 &7026757229925610856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4d9f3b8d4f7942858a4748c3c3a4a73, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 32
+  currentHealth: 0
+  armorPoints: 1
+  isTank: 0
+  isInvincibleInvisible: 0
+  tankManaAmount: 1
+  staysAfterDeath: 0
+  afterlifeAmount: 1
+  GoesRampage: 0
+  RampageHealth: 0
+  YOFFSETVALUE: 0
+  prefab: {fileID: 0}
+  OverHeals: 0
+  OverHealAmount: 0
+  alreadySpawned: 0
+  healthParticles: {fileID: 4692989931688550306, guid: e13a05eb8802745cd90ff502dfa16b13, type: 3}
+  speedOOfBattle: 3
+  ADDBlockParticles: {fileID: 0}
+  blockCount: 0
+  stunDuration: 2
+  nearestEnemy: {fileID: 0}
+  isPrefab: 1
+  isInvincibleAfterTakingDamage: 0
+  invincibilityDuration: 1
+--- !u!114 &5901804180097312899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08283f625ad024bf385dbb48723b582f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  team1SpawnPoint: {fileID: 0}
+  team2SpawnPoint: {fileID: 0}
+--- !u!114 &4155571376662923406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36593b3e4244e495f8140fa27f920e2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDragEnabled: 1
+--- !u!114 &726941374504170789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 272b3ef2a6c94429faefb7833ca1f3c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxMana: 100
+  starterMana: 9
+  currentMana: 0
+  manaPerSecond: 0
+--- !u!114 &8819616275303311292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 824003865730168339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dbd8826b71f14fc2a32c0725f9eceb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  decayDamage: 4
+  decaySpeed: 1

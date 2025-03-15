@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class Projectile : MonoBehaviour
 {
@@ -9,8 +11,12 @@ public class Projectile : MonoBehaviour
     private SpriteRenderer spriteRenderer; // Reference to the SpriteRenderer
     [SerializeField] public bool isPiersesThoughTarget = false;
     [SerializeField] public bool isIgnoresArmorArrow = false;
+    [SerializeField] public bool cursesEnemies = false;
+    [SerializeField] public int curseAmountP = 0;
     [SerializeField] public bool isProjectileStun = false; // Determines if this projectile stuns
     [SerializeField] public float stunAmount = 2f; // Stun duration in seconds
+    [SerializeField] public bool isDamagesMult = false; // New boolean for multiple hits
+    private Dictionary<Collider2D, float> damageTimers = new Dictionary<Collider2D, float>(); // Tracks last hit time per enemy
 
     private void Start()
     {
@@ -64,50 +70,78 @@ public class Projectile : MonoBehaviour
     }
 
     private void OnTriggerEnter2D(Collider2D other)
+{
+    // Check if the object we hit is part of the opposing team
+    if ((teamTag == "Team1" && other.CompareTag("Team2")) || (teamTag == "Team2" && other.CompareTag("Team1")))
+    {
+        // Apply damage to the target
+        DealDamage(other);
+        if (!isPiersesThoughTarget)
+                {
+                    Destroy(gameObject); // Destroy projectile if it doesn't pierce through targets
+                }
+    }
+}
+
+    
+    private void OnTriggerStay2D(Collider2D other)
     {
         // Check if the object we hit is part of the opposing team
         if ((teamTag == "Team1" && other.CompareTag("Team2")) || (teamTag == "Team2" && other.CompareTag("Team1")))
         {
-            // Spawn the particle effect at the collision point
-            SpawnParticleEffect(other.transform.position);
-
-            // Check if the object hit has a HealthSystem and apply damage
-            HealthSystem health = other.GetComponent<HealthSystem>();
-            if (health != null)
+            // Check if it's time to deal damage again
+            if (isDamagesMult)
             {
-                if (isIgnoresArmorArrow)
+                // Only deal damage if the target hasn't been damaged recently (e.g., within the last 0.5 seconds)
+                if (!damageTimers.ContainsKey(other) || Time.time - damageTimers[other] >= 0.1f)
                 {
-                    health.TakeDamage(damage, isIgnoresArmorArrow);
+                    damageTimers[other] = Time.time; // Update the timer for this target
+                    DealDamage(other);  // Apply damage to the target
                 }
-                else
-                {
-                    health.TakeDamage(damage);
-                }
+            }
+        }
+    }
+
+    private void DealDamage(Collider2D target)
+    {
+        // Spawn the particle effect at the collision point
+        SpawnParticleEffect(target.transform.position);
+
+        // Check if the object hit has a HealthSystem and apply damage
+        HealthSystem health = target.GetComponent<HealthSystem>();
+        if (health != null)
+        {
+            if (isIgnoresArmorArrow)
+            {
+                health.TakeDamage(damage, isIgnoresArmorArrow);
             }
             else
             {
-                Debug.LogWarning("HealthSystem not found on the object.");
+                health.TakeDamage(damage);
             }
+        }
+        else
+        {
+            Debug.LogWarning("HealthSystem not found on the object.");
+        }
 
-            // Check for NearestEnemy script and apply stun if applicable
-            if (isProjectileStun)
+        // Check for NearestEnemy script and apply stun if applicable
+        if (isProjectileStun)
+        {
+            NearestEnemy nearestEnemy = target.GetComponent<NearestEnemy>();
+            if (nearestEnemy != null)
             {
-                NearestEnemy nearestEnemy = other.GetComponent<NearestEnemy>();
-                if (nearestEnemy != null)
-                {
-                    nearestEnemy.Stun(stunAmount); // Apply the stun
-                }
-                else
-                {
-                    Debug.LogWarning("NearestEnemy component not found on the object.");
-                }
+                nearestEnemy.Stun(stunAmount); // Apply the stun
             }
+            else
+            {
+                Debug.LogWarning("NearestEnemy component not found on the object.");
+            }
+        }
+        if (cursesEnemies)
+        {
+            health.AddCurse(curseAmountP);
 
-            if (!isPiersesThoughTarget)
-            {
-                // Destroy the projectile after hitting the enemy
-                Destroy(gameObject);
-            }
         }
     }
 
